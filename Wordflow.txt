@@ -1,0 +1,11 @@
+
+				
+Flash view -> home 	-> (logged in) 	-> (it's verified)     -> Text ('Email is verified');
+				-> (it's not verified) -> Verify Email View -> (Verify Success) -> Home view
+									    -> (Verify Failed)
+			-> (not logged in) -> Login View -> (login is success) -> Home View
+						 -> (login is failed)
+
+			-> Press register -> Register View -> (Register is success) -> Home View
+
+				
