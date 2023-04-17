@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_beginner/constants/constants.dart' as constants;
-import 'dart:developer' as devtools show log;
+import 'package:flutter_beginner/constants/index.dart' as constants;
+import 'package:flutter_beginner/services/auth/auth_exceptions.dart';
+
+import '../utilities/index.dart';
 
 class VerifyEmailView extends StatefulWidget {
   const VerifyEmailView({Key? key}) : super(key: key);
@@ -40,7 +42,8 @@ class _VerifyEmailViewState extends State<VerifyEmailView> {
           });
           timer.cancel();
           if (!mounted) return;
-            Navigator.of(context).pushNamedAndRemoveUntil(constants.home, (route) => false);
+          Navigator.of(context)
+              .pushNamedAndRemoveUntil(constants.homeRoute, (route) => false);
         }
       });
     });
@@ -58,23 +61,23 @@ class _VerifyEmailViewState extends State<VerifyEmailView> {
           Text("username: $username"),
           TextButton(
             onPressed: () async {
+              String? message;
               try {
                 final user = FirebaseAuth.instance.currentUser;
                 await user?.sendEmailVerification();
-              } catch (e) {
-                devtools.log(e.toString());
+              } on NetworkRequestFailedException catch (_) {
+                message = constants.networkRequestFailedMessageError;
+              } on GenericAuthException catch (_) {
+                message = constants.genericAuthExceptionMessageError;
+              } finally {
+                if (message != null) {
+                  showErrorDialog(context, message);
+                }
               }
             },
             child: const Text('Send email verification'),
           ),
           TextButton(
-              // onPressed: () async {
-              //   await FirebaseAuth.instance.signOut();
-              //   Navigator.of(context).pushNamedAndRemoveUntil(
-              //   '/login/',
-              //   (route) => false,
-              //   );
-              // },
               onPressed: () => const VerifyEmailView().myAsyncMethod(context),
               child: const Text('Logout')),
         ],

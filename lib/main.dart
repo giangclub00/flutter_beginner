@@ -5,7 +5,7 @@ import 'package:flutter_beginner/firebase_options.dart';
 import 'package:flutter_beginner/views/home_view.dart';
 import 'package:flutter_beginner/views/index.dart';
 
-import 'constants/constants.dart' as constants;
+import 'constants/index.dart' as constants;
 import 'dart:developer' as devtools show log;
 
 void main() {
@@ -18,9 +18,10 @@ void main() {
       ),
       home: const MainPage(),
       routes: {
-        constants.home: (context) => const MainPage(),
-        constants.login: (context) => const LoginView(),
-        constants.register: (context) => const RegisterView(),
+        constants.homeRoute: (context) => const MainPage(),
+        constants.loginRoute: (context) => const LoginView(),
+        constants.registerRoute: (context) => const RegisterView(),
+        constants.verifyEmailRoute: (context) => const VerifyEmailView(),
       },
     ),
   );

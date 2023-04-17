@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as devtools show log;
-import 'package:flutter_beginner/constants/constants.dart' as constants;
+import 'package:flutter_beginner/constants/index.dart' as constants;
 
 class HomeView extends StatefulWidget {
   const HomeView({Key? key}) : super(key: key);
@@ -35,7 +35,7 @@ class _HomeViewState extends State<HomeView> {
                   if (shouldLogout) {
                     FirebaseAuth.instance.signOut();
                     if (!mounted) return;
-                    Navigator.of(context).pushNamedAndRemoveUntil(constants.home,(_) => false);
+                    Navigator.of(context).pushNamedAndRemoveUntil(constants.homeRoute,(_) => false);
                     devtools.log('Sign out success');
                   }
               }

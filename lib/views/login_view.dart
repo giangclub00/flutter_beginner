@@ -1,8 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import 'dart:developer' as devtools show log;
-import 'package:flutter_beginner/constants/constants.dart' as constants;
+import 'package:flutter_beginner/constants/index.dart' as constants;
+import '../services/auth/auth_exceptions.dart';
+import '../services/auth/auth_service.dart';
+import '../utilities/index.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({Key? key}) : super(key: key);
@@ -59,33 +61,29 @@ class _LoginViewState extends State<LoginView> {
             onPressed: () async {
               final email = _email.text;
               final password = _password.text;
+              String? message;
               try {
-                showLoadding(context);
-                await FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password);
+                await AuthService.firebase().logIn(email: email,password: password,);
+                final user = FirebaseAuth.instance.currentUser;
                 if (!mounted) return;
-                Navigator.of(context).pushNamedAndRemoveUntil(constants.home, (route) => false);
-              } on FirebaseAuthException catch (e) {
-                devtools.log(e.toString());
-                String errString = '';
-                switch (e.code) {
-                  case 'user-not-found':
-                    errString = 'User not found';
-                    break;
-                  case 'wrong-password':
-                    errString = 'Wrong password';
-                    break;
-                  case 'invalid-email':
-                    errString = 'Invalid email';
-                    break;
-                  case 'network-request-failed':
-                    errString = 'Network request failed';
-                    break;
-                  default:
-                    errString = 'Error firebase auth';
-                    break;
+                if (user?.emailVerified ?? false) {
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                      constants.homeRoute, (route) => false);
+                } else {
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                      constants.verifyEmailRoute, (route) => false);
                 }
-                Navigator.of(context).pop();
-                showAlertDialog(context, errString);
+              } on UserNotFoundAuthException catch (_) {
+                message = constants.userNotFoundMessageError;
+              } on WrongPasswordAuthException catch (_) {
+                message = constants.wrongPasswordMessageError;
+              } on GenericAuthException catch (e) {
+                message = constants.genericAuthExceptionMessageError;
+                print(e);
+              } finally {
+                if (message != null) {
+                  showErrorDialog(context, message);
+                }
               }
             },
             child: const Text('Login'),
@@ -93,7 +91,7 @@ class _LoginViewState extends State<LoginView> {
           TextButton(
             onPressed: () {
               Navigator.of(context).pushNamedAndRemoveUntil(
-                constants.register,
+                constants.registerRoute,
                 (route) => false,
               );
             },
@@ -103,47 +101,4 @@ class _LoginViewState extends State<LoginView> {
       ),
     );
   }
-}
-
-showAlertDialog(BuildContext context, String errorString) {
-  // set up the buttons
-  Widget okButton = TextButton(
-    child: const Text("Ok"),
-    onPressed: () {
-      Navigator.of(context).pop();
-    },
-  );
-
-  // set up the AlertDialog
-  AlertDialog alert = AlertDialog(
-    title: const Text("Error"),
-    content: Text(errorString),
-    actions: [okButton],
-  );
-
-  // show the dialog
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return alert;
-    },
-  );
-}
-
-showLoadding(BuildContext context) {
-  AlertDialog alert = AlertDialog(
-    content: Row(
-      children: [
-        const CircularProgressIndicator(),
-        Container(margin: const EdgeInsets.only(left: 5), child: const Text("Loading")),
-      ],
-    ),
-  );
-  showDialog(
-    barrierDismissible: false,
-    context: context,
-    builder: (BuildContext context) {
-      return alert;
-    },
-  );
 }

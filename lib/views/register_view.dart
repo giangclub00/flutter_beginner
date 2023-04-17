@@ -1,8 +1,9 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import 'dart:developer' as devtools show log;
-import 'package:flutter_beginner/constants/constants.dart' as constants;
+import 'package:flutter_beginner/constants/index.dart' as constants;
+import 'package:flutter_beginner/services/auth/auth_exceptions.dart';
+import 'package:flutter_beginner/services/auth/auth_service.dart';
+import 'package:flutter_beginner/utilities/show_error_dialog.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({Key? key}) : super(key: key);
@@ -59,18 +60,24 @@ class _RegisterViewState extends State<RegisterView> {
             onPressed: () async {
               final email = _email.text;
               final password = _password.text;
+              String? message;
               try {
-                UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email,password: password);
-                await userCredential.user?.sendEmailVerification();
+                await AuthService.firebase().createUser(email: email,password: password,);
+                await AuthService.firebase().sendEmailVerification();
                 if(!mounted) return;
-                Navigator.of(context).pushNamedAndRemoveUntil(constants.home, (route) => false);
-              } on FirebaseAuthException catch (e) {
-                if (e.code == 'weak-password') {
-                  devtools.log('Weak password');
-                } else if (e.code == 'email-already-in-use') {
-                  devtools.log('Email is already in use');
-                } else if (e.code == 'invalid-email') {
-                  devtools.log('invalid email entered');
+                Navigator.of(context).pushNamedAndRemoveUntil(constants.homeRoute, (route) => false);
+              } on WeakPasswordAuthException catch (_) {
+                message = constants.weakPasswordMessageError;
+              } on EmailAlreadyInUseAuthException catch (_) {
+                message = constants.emailAlreadyInUseMessageError;
+              } on InvalidEmailAuthException catch (_) {
+                message = constants.invalidEmailMessageError;
+              } on GenericAuthException catch (e) {
+                message = constants.genericAuthExceptionMessageError;
+                print(e);
+              }finally {
+                if (message != null) {
+                  showErrorDialog(context, message);
                 }
               }
             },
@@ -79,7 +86,7 @@ class _RegisterViewState extends State<RegisterView> {
           TextButton(
             onPressed: () {
               Navigator.of(context).pushNamedAndRemoveUntil(
-                constants.login,
+                constants.loginRoute,
                 (route) => false,
               );
             },
